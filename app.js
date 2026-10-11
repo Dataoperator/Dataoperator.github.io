@@ -10,10 +10,27 @@ const utilityLinks = [
 ];
 
 const navItems = [
-  ['Individual Solutions', '/individual-solutions'],
-  ['Corporate Benefits', '/corporate-benefits'],
-  ['About', '/about'],
-  ['Start a Quote', 'https://quote.mbaileygroup.com/']
+  {
+    label: 'Individual Solutions',
+    href: '/individual-solutions',
+    children: [
+      ['Health Insurance', '/individual-solutions/health-insurance'],
+      ['Medicare', '/individual-solutions/medicare'],
+      ['Financial Services', 'http://www.mbaileygroup-financial.com/'],
+      ['Dental Insurance', '/individual-solutions/dental-insurance'],
+      ['Life Insurance', '/individual-solutions/life-insurance']
+    ]
+  },
+  { label: 'Corporate Benefits', href: '/corporate-benefits' },
+  {
+    label: 'About',
+    href: '/about',
+    children: [
+      ['Our Story', '/about'],
+      ['Meet Our Team', '/about/team']
+    ]
+  },
+  { label: 'Start a Quote', href: 'https://quote.mbaileygroup.com/' }
 ];
 
 const footerLinks = [
@@ -75,6 +92,18 @@ function internalLink(label, href, extra = '') {
   return `<a href="${href}"${external ? ' target="_blank" rel="noreferrer"' : ' data-route'} ${extra}>${label}</a>`;
 }
 
+/** @param {{label: string, href: string, children?: [string, string][]}} item @param {string} path */
+function navItemMarkup(item, path) {
+  const hasChildren = Boolean(item.children?.length);
+  const isExternal = item.href.startsWith('http');
+  const isActive = path === item.href || Boolean(item.children?.some(([, href]) => path === href));
+  const childLinks = item.children?.map(([label, href]) => internalLink(label, href)).join('') ?? '';
+  return `<div class="nav-menu-item${hasChildren ? ' nav-menu-item--has-children' : ''}${isActive ? ' is-active' : ''}">
+    <a class="nav-menu-link" href="${item.href}"${isExternal ? ' target="_blank" rel="noreferrer"' : ' data-route'}${isActive ? ' aria-current="page"' : ''}>${item.label}</a>
+    ${hasChildren ? `<button class="nav-disclosure" type="button" data-menu-toggle aria-expanded="false" aria-label="Show ${item.label} submenu"><span aria-hidden="true"></span></button><div class="nav-dropdown" role="menu">${childLinks}</div>` : ''}
+  </div>`;
+}
+
 function header() {
   const path = currentPath();
   return `<header class="site-header">
@@ -90,7 +119,7 @@ function header() {
       <button class="mobile-menu-button" id="menu-toggle" type="button" aria-expanded="false" aria-controls="primary-navigation">Menu <span aria-hidden="true">☰</span></button>
       <nav class="primary-nav" id="primary-navigation" aria-label="Primary navigation">
         <div class="primary-nav__links">
-          ${navItems.map(([label, href]) => `<a href="${href}" data-route${path === href ? ' aria-current="page"' : ''}>${label}</a>`).join('')}
+          ${navItems.map((item) => navItemMarkup(item, path)).join('')}
         </div>
       </nav>
     </div>
@@ -215,12 +244,17 @@ function pageHero(title, intro) {
   return `<section class="page-hero"><div class="page-hero__inner"><h1>${title}</h1>${intro ? `<p>${intro}</p>` : ''}</div></section>`;
 }
 
+/** @param {string} title @param {string} intro @param {string} image @param {string} [extraClass] */
+function interiorHero(title, intro, image, extraClass = '') {
+  return `<section class="interior-hero ${extraClass}" style="--interior-image: url('${image}')"><div class="interior-hero__content"><span class="interior-hero__rule" aria-hidden="true"></span><h1>${title}</h1><p>${intro}</p></div></section>`;
+}
+
 function solutions() {
   return `<main id="main-content">
-    ${pageHero('Individual Solutions', 'We make the process of getting the insurance coverage you need simple.')}
-    <section class="section" aria-labelledby="solutions-title"><div class="section__wrap">
-      <p class="content-intro" id="solutions-title">Straightforward advice, local support, and options shaped around the way you live.</p>
-      <div class="card-grid">${solutionCards.map(([title, text, alt, src, href]) => `<article class="solution-card"><div class="solution-card__image"><img src="${src}" alt="${alt}" loading="lazy"></div><div class="solution-card__content"><h2>${title}</h2><p>${text}</p><a href="${href}"${href.startsWith('/') ? ' data-route' : ' target="_blank" rel="noreferrer"'}>Learn More →</a></div></article>`).join('')}</div>
+    ${interiorHero('Individual Solutions', 'We make the process of getting the insurance coverage you need <em>simple</em>.', '/assets/source/interior/individual-solutions-hero.jpg', 'interior-hero--individual')}
+    <section class="section solution-list" aria-labelledby="solutions-title"><div class="section__wrap">
+      <h2 class="visually-hidden" id="solutions-title">Individual insurance solutions</h2>
+      <div class="card-grid solution-card-grid">${solutionCards.map(([title, text, alt, src, href]) => `<article class="solution-card"><a class="solution-card__image" href="${href}"${href.startsWith('/') ? ' data-route' : ' target="_blank" rel="noreferrer"'}><img src="${src}" alt="${alt}" loading="lazy"></a><div class="solution-card__content"><h3>${title}</h3><p>${text}</p><a href="${href}"${href.startsWith('/') ? ' data-route' : ' target="_blank" rel="noreferrer"'}>Learn More <span aria-hidden="true">›</span></a></div></article>`).join('')}</div>
     </div></section>
   </main>`;
 }
@@ -282,11 +316,11 @@ function accidentCoverage() {
 
 function corporateBenefits() {
   return `<main id="main-content">
-    ${pageHero('Corporate Benefits', 'You want exceptional people, so you need exceptional benefits.')}
-    <section class="section"><div class="section__wrap">
-      <p class="content-intro">Empower your workforce to succeed, at work and at home, whether you’re a cast of thousands or a small tight-knit team.</p>
-      <div class="focus-row"><div><h3>Employee Benefits</h3></div><div><h3>Executive Benefits</h3></div><div><h3>HR Solutions</h3></div><div><h3>Well-Being &amp; Engagement</h3></div></div>
-      <div class="copy-columns"><p>Either way, you know good people who have your back are valuable. And the best deserve the best: a complete benefits package they understand.</p><p>We’ve helped businesses overcome every corporate benefits challenge you can think of. We can help find the right retirement plans, facilitate informational meetings that are actually fun, refine current practices, manage notification schedules, customize a technology toolkit, and stay current on compliance.</p><p>Beyond showcasing a variety of plans, we can offer strategic advice as you piece together a holistic benefits ecosystem. Our advisors can support you with tech and HR solutions to ease administrative burden, too.</p><p>Ultimately, the heart of corporate benefits is making your offerings work for your people. We can partner with you to strengthen employees’ appreciation of their benefits for the long haul.</p></div>
+    ${interiorHero('Corporate Benefits', 'You want exceptional people, so you need exceptional benefits.', '/assets/source/interior/corporate-benefits-hero.jpg', 'interior-hero--corporate')}
+    <section class="section corporate-content"><div class="section__wrap">
+      <h2 class="corporate-lead">Empower your workforce to succeed, at work and at home, whether you're a cast of thousands or a small tight-knit team.</h2>
+      <div class="corporate-tile-grid"><article class="corporate-tile" style="--tile-image: url('/assets/source/interior/employee-benefits.jpg')"><h3>Employee Benefits</h3></article><article class="corporate-tile" style="--tile-image: url('/assets/source/interior/executive-benefits.jpg')"><h3>Executive Benefits</h3></article><article class="corporate-tile" style="--tile-image: url('/assets/source/interior/hr-solutions.jpg')"><h3>HR Solutions</h3></article><article class="corporate-tile" style="--tile-image: url('/assets/source/interior/wellbeing-engagement.jpg')"><h3>Well-Being &amp;<br>Engagement</h3></article></div>
+      <div class="corporate-copy"><p>Either way, you know good people who have your back are valuable. And the best deserve the best: a complete benefits package they understand.</p><p>We’ve helped businesses overcome every corporate benefits challenge you can think of. We can help find the right retirement plans, facilitate informational meetings that are actually fun, refine current practices, manage notification schedules, customize a technology toolkit, and stay current on compliance…the list goes on.</p><p>Beyond showcasing a variety of plans, we can offer strategic advice as you piece together a holistic benefits ecosystem. Our advisors can support you with tech and HR solutions to ease administrative burden, too.</p><p>Ultimately, the heart of corporate benefits is making your offerings work for your people. We can partner with you to strengthen employees’ appreciation of their benefits for the long haul.</p></div>
       <div class="nfp-panel"><div><h2>Backed by NFP – a leading insurance broker and consultant.</h2><p>Complex risks will always be part of life, and managing them well requires specialized expertise. Let The Bailey Group and NFP take the worry out of protecting it all and help you build for the future.</p><a class="button button--ink" href="https://nfp.com/" target="_blank" rel="noreferrer">Learn more about NFP »</a></div><div class="nfp-mark" aria-label="NFP">NFP</div></div>
     </div></section>
     <section class="section section--mist trust-block"><div class="section__wrap"><h2>Over 300 companies and organizations trust us to understand their pain points and carefully craft a benefits program that supports and reflects their vision.</h2>${trustLogos()}</div></section>
@@ -305,6 +339,13 @@ function about() {
   return `<main id="main-content">
     ${pageHero('Meet The Bailey Group', 'Our journey to become one of the largest insurance and benefits firms in the State of Florida began over 60 years ago.')}
     <section class="section"><div class="section__wrap"><h2 class="content-intro">Our Story</h2><div class="timeline">${history.map(([year, title, copy, image]) => `<article class="timeline-item"><div class="timeline-year">${year}</div><div class="timeline-content"><h2>${title}</h2><p>${copy}</p>${image ? `<img class="timeline-image" src="${image}" alt="${title}" />` : ''}</div></article>`).join('')}</div></div></section>
+  </main>`;
+}
+
+function team() {
+  return `<main id="main-content">
+    ${pageHero('Meet Our Team', 'Local advisors with deep experience in benefits, health insurance, Medicare, and financial services.')}
+    <section class="section"><div class="section__wrap team-page"><p class="content-intro">The Bailey Group brings together specialists who take the time to understand people, organizations, and the coverage they need.</p><div class="service-grid service-grid--three"><article class="service-card"><h3>Individual Solutions</h3><p>Dedicated advisors provide one-on-one guidance for health insurance, Medicare, dental, life, and international coverage.</p></article><article class="service-card"><h3>Corporate Benefits</h3><p>Benefits specialists build and support programs designed around an employer’s people, needs, and vision.</p></article><article class="service-card"><h3>Local Support</h3><p>Our St. Augustine team is here to answer questions, help resolve issues, and make coverage easier to understand.</p></article></div><aside class="quote-panel"><h2>Have a question for the team?</h2><a class="button button--ink" data-route href="/contact">Contact Us</a></aside></div></section>
   </main>`;
 }
 
@@ -348,6 +389,7 @@ const routes = {
   '/individual-solutions/accident-critical-illness-hospital-idemnity': accidentCoverage,
   '/corporate-benefits': corporateBenefits,
   '/about': about,
+  '/about/team': team,
   '/contact': contact,
   '/privacy': privacy,
   '/accessibility': accessibility
@@ -362,6 +404,17 @@ function bindInteractions() {
       window.history.pushState({}, '', href);
       render();
       window.scrollTo({ top: 0, behavior: 'instant' });
+    });
+  });
+
+  document.querySelectorAll('[data-menu-toggle]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const menuItem = button.closest('.nav-menu-item');
+      if (!menuItem) return;
+      const opening = !menuItem.classList.contains('is-open');
+      document.querySelectorAll('.nav-menu-item.is-open').forEach((item) => item.classList.remove('is-open'));
+      menuItem.classList.toggle('is-open', opening);
+      button.setAttribute('aria-expanded', String(opening));
     });
   });
 
